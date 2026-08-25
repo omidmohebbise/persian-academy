@@ -1,3 +1,5 @@
+"use client";
+
 import {
   BookOpen,
   ChevronLeft,
@@ -10,9 +12,8 @@ import Avatar from "@/components/Avatar";
 import StatsPill from "@/components/StatsPill";
 import StoryCard from "@/components/StoryCard";
 import Link from "next/link";
-import { getCurrentUser } from "@/lib/api/profile";
-import { getStoryPreviews } from "@/lib/api/stories";
-import { getTodayLesson } from "@/lib/api/home";
+import { useAppState } from "@/lib/store/AppStateContext";
+import { mockTodayLesson } from "@/lib/mock/lesson";
 
 const tiles = [
   {
@@ -49,12 +50,10 @@ const tiles = [
   },
 ];
 
-export default async function HomePage() {
-  const [user, lesson, stories] = await Promise.all([
-    getCurrentUser(),
-    getTodayLesson(),
-    getStoryPreviews(4),
-  ]);
+export default function HomePage() {
+  const { user, stories } = useAppState();
+  const lesson = mockTodayLesson;
+  const storyPreviews = stories.slice(0, 4);
 
   return (
     <main className="px-4 pt-6">
@@ -118,7 +117,7 @@ export default async function HomePage() {
           dir="ltr"
           className="no-scrollbar mt-3 flex gap-3 overflow-x-auto pb-1"
         >
-          {stories.map((s) => (
+          {storyPreviews.map((s) => (
             <StoryCard key={s.id} story={s} />
           ))}
         </div>

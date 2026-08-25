@@ -1,15 +1,13 @@
+"use client";
+
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import StoryCard from "@/components/StoryCard";
 import StatsPill from "@/components/StatsPill";
-import { getAllStories } from "@/lib/api/stories";
-import { getCurrentUser } from "@/lib/api/profile";
+import { useAppState } from "@/lib/store/AppStateContext";
 
-export default async function StoriesPage() {
-  const [stories, user] = await Promise.all([
-    getAllStories(),
-    getCurrentUser(),
-  ]);
+export default function StoriesPage() {
+  const { user, stories } = useAppState();
   const completed = stories.filter((s) => s.status === "completed");
   const locked = stories.filter((s) => s.status === "locked");
 
@@ -42,16 +40,18 @@ export default async function StoriesPage() {
         </div>
       </section>
 
-      <section className="mt-7">
-        <h2 className="text-right text-base font-bold text-ink/70">
-          قفل‌شده
-        </h2>
-        <div className="mt-3 grid grid-cols-2 gap-4">
-          {locked.map((s) => (
-            <StoryCard key={s.id} story={s} className="w-full" />
-          ))}
-        </div>
-      </section>
+      {locked.length > 0 && (
+        <section className="mt-7">
+          <h2 className="text-right text-base font-bold text-ink/70">
+            قفل‌شده
+          </h2>
+          <div className="mt-3 grid grid-cols-2 gap-4">
+            {locked.map((s) => (
+              <StoryCard key={s.id} story={s} className="w-full" />
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }

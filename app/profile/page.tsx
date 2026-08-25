@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Settings,
   Sparkles,
@@ -10,13 +12,15 @@ import {
   Lock,
   Flame,
   Pencil,
+  RotateCcw,
   Trophy,
   User,
   Check,
 } from "lucide-react";
 import Avatar from "@/components/Avatar";
 import StatsPill from "@/components/StatsPill";
-import { getCurrentUser, getUserBadges } from "@/lib/api/profile";
+import { useAppState } from "@/lib/store/AppStateContext";
+import { mockBadges } from "@/lib/mock/user";
 import { toPersianDigits } from "@/lib/format";
 import type { BadgeIconKey, BadgeTheme } from "@/types";
 
@@ -36,11 +40,9 @@ const BADGE_THEMES: Record<BadgeTheme, { bg: string; iconBg: string }> = {
   locked: { bg: "bg-black/5", iconBg: "bg-ink/20" },
 };
 
-export default async function ProfilePage() {
-  const [user, badges] = await Promise.all([
-    getCurrentUser(),
-    getUserBadges(),
-  ]);
+export default function ProfilePage() {
+  const { user, resetProgress } = useAppState();
+  const badges = mockBadges;
 
   const goalPercent = Math.min(
     100,
@@ -86,9 +88,22 @@ export default async function ProfilePage() {
             سفر یادگیری من در زبان فارسی
           </p>
         </div>
-        <button className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-card">
-          <Settings size={18} className="text-ink/60" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              if (window.confirm("پیشرفت یادگیری بازنشانی شود؟")) {
+                resetProgress();
+              }
+            }}
+            title="بازنشانی پیشرفت (دمو)"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-card"
+          >
+            <RotateCcw size={16} className="text-ink/60" />
+          </button>
+          <button className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-card">
+            <Settings size={18} className="text-ink/60" />
+          </button>
+        </div>
       </div>
 
       {/* Avatar + name */}

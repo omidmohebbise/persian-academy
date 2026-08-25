@@ -8,8 +8,10 @@ export const mockUser: User = {
   streakDays: 7,
   goalWords: 3000,
   wordsLearned: 97,
+  // Every 100 words is a level, per the project description's "0 → 100 →
+  // 200 → ... Level Up" milestones (see lib/store/AppStateContext.tsx).
   level: 1,
-  levelWordsRequired: 1000,
+  levelWordsRequired: 100,
   stats: {
     storiesRead: 8,
     factsLearned: 3,

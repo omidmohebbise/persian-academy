@@ -111,3 +111,27 @@ export interface WordSubmissionResult {
   translatedWord?: string;
   message: string;
 }
+
+/**
+ * A generated "Teach Me" learning path for one foreign word: the minimal
+ * shape of the project description's "relevant letters, pronunciation,
+ * images, examples, exercises, repetition, final word" lesson.
+ */
+export interface LessonPath {
+  sourceWord: string;
+  persianWord: string;
+  transliteration: string;
+  emoji: string;
+  exampleFa: string;
+  exampleEn: string;
+  /** Multiple-choice quiz options (includes the correct answer), pre-shuffled. */
+  quizOptions: string[];
+}
+
+/** Result of applying a learned word to the user's progress. */
+export interface ProgressUpdate {
+  xpEarned: number;
+  leveledUp: boolean;
+  newLevel: number;
+  unlockedStoryTitle: string | null;
+}

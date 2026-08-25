@@ -1,58 +1,71 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Star, Loader2, CheckCircle2 } from "lucide-react";
 import Avatar from "@/components/Avatar";
 import StatsPill from "@/components/StatsPill";
-import { getCurrentUser } from "@/lib/api/profile";
-import { submitForeignWord, submitPersianWord } from "@/lib/api/discover";
-import type { User } from "@/types";
+import LessonWizard from "@/components/LessonWizard";
+import { useAppState } from "@/lib/store/AppStateContext";
+import { generateLessonPath } from "@/lib/api/discover";
+import type { LessonPath, ProgressUpdate } from "@/types";
 
-type SubmitStatus = "idle" | "loading" | "done";
+function progressMessage(progress: ProgressUpdate | null): string {
+  if (!progress) return "";
+  const parts = [`+${progress.xpEarned} XP`];
+  if (progress.leveledUp) parts.push(`🎉 به سطح ${progress.newLevel} رسیدی!`);
+  if (progress.unlockedStoryTitle)
+    parts.push(`📖 داستان «${progress.unlockedStoryTitle}» باز شد!`);
+  return parts.join(" ");
+}
 
 export default function DiscoverPage() {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, learnForeignWord, learnPersianWord } = useAppState();
 
-  useEffect(() => {
-    getCurrentUser().then(setUser);
-  }, []);
-
+  // Card 1: Teach Me
   const [foreignWord, setForeignWord] = useState("");
-  const [foreignStatus, setForeignStatus] = useState<SubmitStatus>("idle");
-  const [foreignMessage, setForeignMessage] = useState("");
+  const [lessonLoading, setLessonLoading] = useState(false);
+  const [lesson, setLesson] = useState<LessonPath | null>(null);
+  const [foreignResultMessage, setForeignResultMessage] = useState("");
 
-  const [persianWord, setPersianWord] = useState("");
-  const [persianStatus, setPersianStatus] = useState<SubmitStatus>("idle");
-  const [persianMessage, setPersianMessage] = useState("");
-
-  async function handleForeignSubmit() {
-    if (!foreignWord.trim() || foreignStatus === "loading") return;
-    setForeignStatus("loading");
-    const result = await submitForeignWord(foreignWord, "en");
-    setForeignMessage(result.message);
-    setForeignStatus("done");
-    if (result.success) {
-      setUser((u) => (u ? { ...u, xp: u.xp + result.xpEarned } : u));
-      setForeignWord("");
-    }
+  async function startLesson() {
+    if (!foreignWord.trim() || lessonLoading) return;
+    setLessonLoading(true);
+    setForeignResultMessage("");
+    const path = await generateLessonPath(foreignWord);
+    setLesson(path);
+    setLessonLoading(false);
   }
+
+  async function finishLesson() {
+    if (!lesson) return;
+    const { progress } = await learnForeignWord(lesson.sourceWord);
+    setForeignResultMessage(
+      `کلمه "${lesson.persianWord}" را یاد گرفتی! ${progressMessage(progress)}`
+    );
+    setLesson(null);
+    setForeignWord("");
+  }
+
+  // Card 2: Explore
+  const [persianWord, setPersianWord] = useState("");
+  const [persianStatus, setPersianStatus] = useState<
+    "idle" | "loading" | "done"
+  >("idle");
+  const [persianMessage, setPersianMessage] = useState("");
 
   async function handlePersianSubmit() {
     if (!persianWord.trim() || persianStatus === "loading") return;
     setPersianStatus("loading");
-    const result = await submitPersianWord(persianWord);
-    setPersianMessage(result.message);
+    const { result, progress } = await learnPersianWord(persianWord);
+    setPersianMessage(`${result.message} ${progressMessage(progress)}`.trim());
     setPersianStatus("done");
-    if (result.success) {
-      setUser((u) => (u ? { ...u, xp: u.xp + result.xpEarned } : u));
-      setPersianWord("");
-    }
+    if (result.success) setPersianWord("");
   }
 
   return (
     <main className="px-4 pt-6">
       <div className="flex items-center justify-between">
-        <StatsPill xp={user?.xp} streak={user?.streakDays} />
+        <StatsPill xp={user.xp} streak={user.streakDays} />
         <div className="flex items-center gap-3">
           <div className="text-right">
             <h1 className="text-lg font-extrabold">کشف و یادگیری</h1>
@@ -89,53 +102,61 @@ export default function DiscoverPage() {
           </span>
         </div>
 
-        <div className="mt-3 flex justify-center">
-          <span className="text-7xl">🧑‍🚀</span>
-        </div>
+        {!lesson && (
+          <div className="mt-3 flex justify-center">
+            <span className="text-7xl">🧑‍🚀</span>
+          </div>
+        )}
 
-        <div className="mt-2 flex items-center gap-2 rounded-2xl bg-white px-4 py-3 shadow-card">
-          <span className="text-lg">🇬🇧</span>
-          <input
-            dir="ltr"
-            value={foreignWord}
-            onChange={(e) => setForeignWord(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleForeignSubmit()}
-            placeholder="tree , book , water"
-            className="flex-1 bg-transparent text-sm text-ink/60 placeholder:text-ink/30 focus:outline-none"
-          />
-        </div>
-
-        <div className="mt-3 flex items-center gap-2">
-          <button
-            onClick={handleForeignSubmit}
-            disabled={!foreignWord.trim() || foreignStatus === "loading"}
-            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand-500 py-3.5 text-base font-bold text-white shadow-soft transition active:scale-[0.98] disabled:opacity-50"
-          >
-            {foreignStatus === "loading" && (
-              <Loader2 size={18} className="animate-spin" />
-            )}
-            یاد بده
-          </button>
-          <span className="rounded-2xl bg-brand-700/90 px-3 py-3.5 text-xs font-bold text-white">
-            +50 XP
-          </span>
-        </div>
-
-        {foreignStatus === "done" ? (
-          <p className="mt-3 flex items-center gap-1.5 text-right text-xs font-semibold leading-6 text-brand-600">
-            <CheckCircle2 size={14} />
-            {foreignMessage}
-          </p>
+        {lesson ? (
+          <LessonWizard lesson={lesson} onComplete={finishLesson} />
         ) : (
-          <p className="mt-3 flex items-start gap-1.5 text-right text-xs leading-6 text-ink/50">
-            <span>💡</span>
-            <span>
-              مثال: اگر بنویسی <b className="text-ink/70">tree</b>، ما به تو
-              یاد می‌دهیم چطور &quot;
-              <b className="text-brand-600">درخت</b>&quot; به فارسی نوشته و
-              گفته می‌شود.
-            </span>
-          </p>
+          <>
+            <div className="mt-2 flex items-center gap-2 rounded-2xl bg-white px-4 py-3 shadow-card">
+              <span className="text-lg">🇬🇧</span>
+              <input
+                dir="ltr"
+                value={foreignWord}
+                onChange={(e) => setForeignWord(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && startLesson()}
+                placeholder="tree , book , water"
+                className="flex-1 bg-transparent text-sm text-ink/60 placeholder:text-ink/30 focus:outline-none"
+              />
+            </div>
+
+            <div className="mt-3 flex items-center gap-2">
+              <button
+                onClick={startLesson}
+                disabled={!foreignWord.trim() || lessonLoading}
+                className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand-500 py-3.5 text-base font-bold text-white shadow-soft transition active:scale-[0.98] disabled:opacity-50"
+              >
+                {lessonLoading && (
+                  <Loader2 size={18} className="animate-spin" />
+                )}
+                یاد بده
+              </button>
+              <span className="rounded-2xl bg-brand-700/90 px-3 py-3.5 text-xs font-bold text-white">
+                +50 XP
+              </span>
+            </div>
+
+            {foreignResultMessage ? (
+              <p className="mt-3 flex items-center gap-1.5 text-right text-xs font-semibold leading-6 text-brand-600">
+                <CheckCircle2 size={14} />
+                {foreignResultMessage}
+              </p>
+            ) : (
+              <p className="mt-3 flex items-start gap-1.5 text-right text-xs leading-6 text-ink/50">
+                <span>💡</span>
+                <span>
+                  مثال: اگر بنویسی <b className="text-ink/70">tree</b>، ما به
+                  تو درسی کوتاه می‌دهیم تا یاد بگیری چطور &quot;
+                  <b className="text-brand-600">درخت</b>&quot; به فارسی نوشته
+                  و گفته می‌شود.
+                </span>
+              </p>
+            )}
+          </>
         )}
       </section>
 

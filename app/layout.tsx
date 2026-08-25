@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Vazirmatn } from "next/font/google";
 import "./globals.css";
 import BottomNav from "@/components/BottomNav";
+import { AppStateProvider } from "@/lib/store/AppStateContext";
 
 const vazir = Vazirmatn({
   subsets: ["arabic"],
@@ -22,10 +23,12 @@ export default function RootLayout({
   return (
     <html lang="fa" dir="rtl">
       <body className={`${vazir.variable} font-vazir bg-cream text-ink`}>
-        <div className="mx-auto min-h-screen max-w-[520px] bg-cream pb-24">
-          {children}
-        </div>
-        <BottomNav />
+        <AppStateProvider>
+          <div className="mx-auto min-h-screen max-w-[520px] bg-cream pb-24">
+            {children}
+          </div>
+          <BottomNav />
+        </AppStateProvider>
       </body>
     </html>
   );
