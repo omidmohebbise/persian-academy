@@ -1,12 +1,58 @@
-import { Search, BookOpen, Lightbulb, Star } from "lucide-react";
+"use client";
+
+import { useEffect, useState } from "react";
+import { Star, Loader2, CheckCircle2 } from "lucide-react";
 import Avatar from "@/components/Avatar";
 import StatsPill from "@/components/StatsPill";
+import { getCurrentUser } from "@/lib/api/profile";
+import { submitForeignWord, submitPersianWord } from "@/lib/api/discover";
+import type { User } from "@/types";
+
+type SubmitStatus = "idle" | "loading" | "done";
 
 export default function DiscoverPage() {
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    getCurrentUser().then(setUser);
+  }, []);
+
+  const [foreignWord, setForeignWord] = useState("");
+  const [foreignStatus, setForeignStatus] = useState<SubmitStatus>("idle");
+  const [foreignMessage, setForeignMessage] = useState("");
+
+  const [persianWord, setPersianWord] = useState("");
+  const [persianStatus, setPersianStatus] = useState<SubmitStatus>("idle");
+  const [persianMessage, setPersianMessage] = useState("");
+
+  async function handleForeignSubmit() {
+    if (!foreignWord.trim() || foreignStatus === "loading") return;
+    setForeignStatus("loading");
+    const result = await submitForeignWord(foreignWord, "en");
+    setForeignMessage(result.message);
+    setForeignStatus("done");
+    if (result.success) {
+      setUser((u) => (u ? { ...u, xp: u.xp + result.xpEarned } : u));
+      setForeignWord("");
+    }
+  }
+
+  async function handlePersianSubmit() {
+    if (!persianWord.trim() || persianStatus === "loading") return;
+    setPersianStatus("loading");
+    const result = await submitPersianWord(persianWord);
+    setPersianMessage(result.message);
+    setPersianStatus("done");
+    if (result.success) {
+      setUser((u) => (u ? { ...u, xp: u.xp + result.xpEarned } : u));
+      setPersianWord("");
+    }
+  }
+
   return (
     <main className="px-4 pt-6">
       <div className="flex items-center justify-between">
-        <StatsPill />
+        <StatsPill xp={user?.xp} streak={user?.streakDays} />
         <div className="flex items-center gap-3">
           <div className="text-right">
             <h1 className="text-lg font-extrabold">کشف و یادگیری</h1>
@@ -51,13 +97,23 @@ export default function DiscoverPage() {
           <span className="text-lg">🇬🇧</span>
           <input
             dir="ltr"
+            value={foreignWord}
+            onChange={(e) => setForeignWord(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleForeignSubmit()}
             placeholder="tree , book , water"
             className="flex-1 bg-transparent text-sm text-ink/60 placeholder:text-ink/30 focus:outline-none"
           />
         </div>
 
         <div className="mt-3 flex items-center gap-2">
-          <button className="flex-1 rounded-2xl bg-brand-500 py-3.5 text-base font-bold text-white shadow-soft transition active:scale-[0.98]">
+          <button
+            onClick={handleForeignSubmit}
+            disabled={!foreignWord.trim() || foreignStatus === "loading"}
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand-500 py-3.5 text-base font-bold text-white shadow-soft transition active:scale-[0.98] disabled:opacity-50"
+          >
+            {foreignStatus === "loading" && (
+              <Loader2 size={18} className="animate-spin" />
+            )}
             یاد بده
           </button>
           <span className="rounded-2xl bg-brand-700/90 px-3 py-3.5 text-xs font-bold text-white">
@@ -65,14 +121,22 @@ export default function DiscoverPage() {
           </span>
         </div>
 
-        <p className="mt-3 flex items-start gap-1.5 text-right text-xs leading-6 text-ink/50">
-          <span>💡</span>
-          <span>
-            مثال: اگر بنویسی <b className="text-ink/70">tree</b>، ما به تو یاد
-            می‌دهیم چطور &quot;<b className="text-brand-600">درخت</b>&quot; به
-            فارسی نوشته و گفته می‌شود.
-          </span>
-        </p>
+        {foreignStatus === "done" ? (
+          <p className="mt-3 flex items-center gap-1.5 text-right text-xs font-semibold leading-6 text-brand-600">
+            <CheckCircle2 size={14} />
+            {foreignMessage}
+          </p>
+        ) : (
+          <p className="mt-3 flex items-start gap-1.5 text-right text-xs leading-6 text-ink/50">
+            <span>💡</span>
+            <span>
+              مثال: اگر بنویسی <b className="text-ink/70">tree</b>، ما به تو
+              یاد می‌دهیم چطور &quot;
+              <b className="text-brand-600">درخت</b>&quot; به فارسی نوشته و
+              گفته می‌شود.
+            </span>
+          </p>
+        )}
       </section>
 
       {/* Card 2: enter known Persian word */}
@@ -104,13 +168,23 @@ export default function DiscoverPage() {
             فا
           </span>
           <input
+            value={persianWord}
+            onChange={(e) => setPersianWord(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handlePersianSubmit()}
             placeholder="مثلا: درخت ، مادر ، خانه ..."
             className="flex-1 bg-transparent text-right text-sm text-ink/60 placeholder:text-ink/30 focus:outline-none"
           />
         </div>
 
         <div className="mt-3 flex items-center gap-2">
-          <button className="flex-1 rounded-2xl bg-purple-500 py-3.5 text-base font-bold text-white shadow-soft transition active:scale-[0.98]">
+          <button
+            onClick={handlePersianSubmit}
+            disabled={!persianWord.trim() || persianStatus === "loading"}
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-purple-500 py-3.5 text-base font-bold text-white shadow-soft transition active:scale-[0.98] disabled:opacity-50"
+          >
+            {persianStatus === "loading" && (
+              <Loader2 size={18} className="animate-spin" />
+            )}
             بررسی کن
           </button>
           <span className="rounded-2xl bg-purple-600/90 px-3 py-3.5 text-xs font-bold text-white">
@@ -118,13 +192,23 @@ export default function DiscoverPage() {
           </span>
         </div>
 
-        <p className="mt-3 flex items-start gap-1.5 text-right text-xs leading-6 text-ink/50">
-          <Star size={13} className="mt-0.5 shrink-0 fill-gold-500 text-gold-500" />
-          <span>
-            مثال: اگر بنویسی &quot;<b className="text-purple-500">درخت</b>
-            &quot;، به سطح بالاتری می‌روی یا داستان جدیدی باز می‌کنی!
-          </span>
-        </p>
+        {persianStatus === "done" ? (
+          <p className="mt-3 flex items-center gap-1.5 text-right text-xs font-semibold leading-6 text-purple-600">
+            <CheckCircle2 size={14} />
+            {persianMessage}
+          </p>
+        ) : (
+          <p className="mt-3 flex items-start gap-1.5 text-right text-xs leading-6 text-ink/50">
+            <Star
+              size={13}
+              className="mt-0.5 shrink-0 fill-gold-500 text-gold-500"
+            />
+            <span>
+              مثال: اگر بنویسی &quot;<b className="text-purple-500">درخت</b>
+              &quot;، به سطح بالاتری می‌روی یا داستان جدیدی باز می‌کنی!
+            </span>
+          </p>
+        )}
       </section>
 
       {/* XP explainer */}

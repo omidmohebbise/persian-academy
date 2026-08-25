@@ -12,97 +12,72 @@ import {
   Pencil,
   Trophy,
   User,
-  Flag,
+  Check,
 } from "lucide-react";
 import Avatar from "@/components/Avatar";
 import StatsPill from "@/components/StatsPill";
+import { getCurrentUser, getUserBadges } from "@/lib/api/profile";
+import { toPersianDigits } from "@/lib/format";
+import type { BadgeIconKey, BadgeTheme } from "@/types";
 
-const aboutCards = [
-  {
-    icon: BookOpen,
-    value: "۸",
-    label: "داستان خوانده‌ام",
-    caption: "ادامه بده! قصه‌های بیشتری منتظر توست.",
-    bg: "bg-brand-50",
-    iconBg: "bg-brand-500",
-  },
-  {
-    icon: Lightbulb,
-    value: "۳",
-    label: "دانستنی یاد گرفتم",
-    caption: "چه چیزهای جالبی درباره ایران یاد گرفتی!",
-    bg: "bg-purple-50",
-    iconBg: "bg-purple-500",
-  },
-  {
-    icon: MessageCircle,
-    value: "۹۷",
-    label: "کلمه بلدم",
-    caption: "هر روز بهتر از دیروز!",
-    bg: "bg-gold-50",
-    iconBg: "bg-gold-500",
-  },
-];
+const BADGE_ICONS: Record<BadgeIconKey, typeof Sprout> = {
+  sprout: Sprout,
+  star: Star,
+  book: BookOpen,
+  "calendar-check": CalendarCheck,
+  locked: Lock,
+};
 
-const badges = [
-  {
-    icon: Sprout,
-    title: "اولین کلمه",
-    desc: "اولین کلمه را یاد گرفتی",
-    bg: "bg-brand-50",
-    iconBg: "bg-brand-500",
-    done: true,
-  },
-  {
-    icon: Star,
-    title: "۱۰۰ کلمه",
-    desc: "۱۰۰ کلمه یاد گرفتی",
-    bg: "bg-sky-50",
-    iconBg: "bg-sky-500",
-    done: true,
-  },
-  {
-    icon: BookOpen,
-    title: "اولین داستان",
-    desc: "یک داستان خواندی",
-    bg: "bg-gold-50",
-    iconBg: "bg-gold-500",
-    done: true,
-  },
-  {
-    icon: CalendarCheck,
-    title: "۷ روز پشت سر هم",
-    desc: "یک هفته متوالی یاد گرفتی",
-    bg: "bg-purple-50",
-    iconBg: "bg-purple-500",
-    done: true,
-  },
-  {
-    icon: Lock,
-    title: "۵۰ داستان",
-    desc: "۵۰ داستان بخوان",
-    bg: "bg-black/5",
-    iconBg: "bg-ink/20",
-    done: false,
-    progress: "۸ / ۵۰",
-  },
-];
+const BADGE_THEMES: Record<BadgeTheme, { bg: string; iconBg: string }> = {
+  brand: { bg: "bg-brand-50", iconBg: "bg-brand-500" },
+  sky: { bg: "bg-sky-50", iconBg: "bg-sky-500" },
+  gold: { bg: "bg-gold-50", iconBg: "bg-gold-500" },
+  purple: { bg: "bg-purple-50", iconBg: "bg-purple-500" },
+  locked: { bg: "bg-black/5", iconBg: "bg-ink/20" },
+};
 
-const week = [
-  { d: "ش", done: true },
-  { d: "ی", done: true },
-  { d: "د", done: true },
-  { d: "س", done: true },
-  { d: "چ", done: true },
-  { d: "پ", done: true },
-  { d: "ج", done: false },
-];
+export default async function ProfilePage() {
+  const [user, badges] = await Promise.all([
+    getCurrentUser(),
+    getUserBadges(),
+  ]);
 
-export default function ProfilePage() {
+  const goalPercent = Math.min(
+    100,
+    (user.wordsLearned / user.goalWords) * 100
+  );
+
+  const aboutCards = [
+    {
+      icon: BookOpen,
+      value: user.stats.storiesRead,
+      label: "داستان خوانده‌ام",
+      caption: "ادامه بده! قصه‌های بیشتری منتظر توست.",
+      bg: "bg-brand-50",
+      iconBg: "bg-brand-500",
+    },
+    {
+      icon: Lightbulb,
+      value: user.stats.factsLearned,
+      label: "دانستنی یاد گرفتم",
+      caption: "چه چیزهای جالبی درباره ایران یاد گرفتی!",
+      bg: "bg-purple-50",
+      iconBg: "bg-purple-500",
+    },
+    {
+      icon: MessageCircle,
+      value: user.stats.wordsKnown,
+      label: "کلمه بلدم",
+      caption: "هر روز بهتر از دیروز!",
+      bg: "bg-gold-50",
+      iconBg: "bg-gold-500",
+    },
+  ];
+
   return (
     <main className="px-4 pt-6">
       <div className="flex items-start justify-between">
-        <StatsPill />
+        <StatsPill xp={user.xp} streak={user.streakDays} />
         <div className="flex-1 text-center">
           <h1 className="text-3xl font-extrabold text-brand-500">
             مَن <Sparkles className="mb-1 inline text-gold-500" size={20} />
@@ -124,7 +99,7 @@ export default function ProfilePage() {
             <Pencil size={14} className="text-ink/60" />
           </button>
         </div>
-        <h2 className="mt-3 text-xl font-extrabold">آرین</h2>
+        <h2 className="mt-3 text-xl font-extrabold">{user.name}</h2>
         <button className="mt-2 flex items-center gap-1.5 rounded-full bg-white px-4 py-1.5 text-xs font-semibold text-ink/60 shadow-card">
           <User size={13} />
           ویرایش پروفایل
@@ -139,7 +114,9 @@ export default function ProfilePage() {
           </div>
           <div className="text-right">
             <p className="text-sm text-ink/45">هدف من:</p>
-            <p className="text-xl font-extrabold">۳۰۰۰ کلمه فارسی</p>
+            <p className="text-xl font-extrabold">
+              {toPersianDigits(user.goalWords)} کلمه فارسی
+            </p>
           </div>
         </div>
 
@@ -147,24 +124,30 @@ export default function ProfilePage() {
           <div className="flex w-24 shrink-0 flex-col items-center justify-center rounded-2xl bg-gold-50 py-3">
             <p className="text-xs font-semibold text-ink/50">سطح من</p>
             <div className="mt-2 flex h-11 w-11 items-center justify-center rounded-xl bg-brand-500 text-xs font-extrabold text-white">
-              Lv.1
+              Lv.{user.level}
             </div>
-            <p className="mt-2 text-[11px] text-ink/45">۱۰۰۰ کلمه</p>
+            <p className="mt-2 text-[11px] text-ink/45">
+              {toPersianDigits(user.levelWordsRequired)} کلمه
+            </p>
           </div>
 
           <div className="flex-1 rounded-2xl bg-cream p-4">
             <p className="text-sm font-semibold text-ink/50">پیشرفت من</p>
             <p className="mt-1 text-2xl font-extrabold text-brand-600">
-              ۹۷ <span className="text-base font-medium text-ink/40">/ 3000</span>
+              {toPersianDigits(user.wordsLearned)}{" "}
+              <span className="text-base font-medium text-ink/40">
+                / {user.goalWords}
+              </span>
             </p>
             <div className="mt-2 h-2.5 w-full rounded-full bg-black/10">
               <div
                 className="h-2.5 rounded-full bg-brand-500"
-                style={{ width: "3%" }}
+                style={{ width: `${goalPercent}%` }}
               />
             </div>
             <p className="mt-2 text-xs text-ink/45">
-              شما ۹۷ کلمه از ۳۰۰۰ کلمه را یاد گرفته‌اید!
+              شما {toPersianDigits(user.wordsLearned)} کلمه از{" "}
+              {toPersianDigits(user.goalWords)} کلمه را یاد گرفته‌اید!
             </p>
           </div>
         </div>
@@ -192,7 +175,9 @@ export default function ProfilePage() {
                 >
                   <Icon size={16} />
                 </span>
-                <p className="mt-2 text-xl font-extrabold">{c.value}</p>
+                <p className="mt-2 text-xl font-extrabold">
+                  {toPersianDigits(c.value)}
+                </p>
                 <p className="mt-0.5 text-xs font-semibold text-ink/70">
                   {c.label}
                 </p>
@@ -214,27 +199,20 @@ export default function ProfilePage() {
 
         <div className="mt-3 grid grid-cols-3 gap-3">
           {badges.map((b) => {
-            const Icon = b.icon;
+            const Icon = BADGE_ICONS[b.icon];
+            const theme = BADGE_THEMES[b.theme];
             return (
               <div
-                key={b.title}
-                className={`relative rounded-2xl ${b.bg} p-3 text-center`}
+                key={b.id}
+                className={`relative rounded-2xl ${theme.bg} p-3 text-center`}
               >
-                {b.done && (
+                {b.achieved && (
                   <span className="absolute -left-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-brand-500 text-white">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-                      <path
-                        d="M20 6 9 17l-5-5"
-                        stroke="white"
-                        strokeWidth="3"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
+                    <Check size={10} strokeWidth={3} />
                   </span>
                 )}
                 <span
-                  className={`mx-auto flex h-11 w-11 items-center justify-center rounded-xl ${b.iconBg} text-white`}
+                  className={`mx-auto flex h-11 w-11 items-center justify-center rounded-xl ${theme.iconBg} text-white`}
                 >
                   <Icon size={18} />
                 </span>
@@ -242,21 +220,28 @@ export default function ProfilePage() {
                   {b.title}
                 </p>
                 <p className="mt-0.5 text-[10px] leading-snug text-ink/40">
-                  {b.desc}
+                  {b.description}
                 </p>
-                {!b.done && b.progress && (
-                  <>
-                    <div className="mt-1.5 h-1.5 w-full rounded-full bg-black/10">
-                      <div
-                        className="h-1.5 rounded-full bg-brand-400"
-                        style={{ width: "16%" }}
-                      />
-                    </div>
-                    <p className="mt-1 text-[10px] font-semibold text-ink/40">
-                      {b.progress}
-                    </p>
-                  </>
-                )}
+                {!b.achieved &&
+                  b.progressCurrent !== undefined &&
+                  b.progressTarget !== undefined && (
+                    <>
+                      <div className="mt-1.5 h-1.5 w-full rounded-full bg-black/10">
+                        <div
+                          className="h-1.5 rounded-full bg-brand-400"
+                          style={{
+                            width: `${
+                              (b.progressCurrent / b.progressTarget) * 100
+                            }%`,
+                          }}
+                        />
+                      </div>
+                      <p className="mt-1 text-[10px] font-semibold text-ink/40">
+                        {toPersianDigits(b.progressCurrent)} /{" "}
+                        {toPersianDigits(b.progressTarget)}
+                      </p>
+                    </>
+                  )}
               </div>
             );
           })}
@@ -271,32 +256,20 @@ export default function ProfilePage() {
               تقویم یادگیری این هفته
             </p>
             <div className="mt-3 flex items-center justify-between">
-              {week.map((w) => (
-                <div key={w.d} className="flex flex-col items-center gap-1.5">
-                  <span className="text-[11px] text-ink/40">{w.d}.</span>
+              {user.weekCalendar.map((w) => (
+                <div
+                  key={w.day}
+                  className="flex flex-col items-center gap-1.5"
+                >
+                  <span className="text-[11px] text-ink/40">{w.day}.</span>
                   <span
                     className={`flex h-7 w-7 items-center justify-center rounded-full ${
-                      w.done
+                      w.completed
                         ? "bg-brand-500 text-white"
                         : "border-2 border-black/10 bg-transparent"
                     }`}
                   >
-                    {w.done && (
-                      <svg
-                        width="12"
-                        height="12"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                      >
-                        <path
-                          d="M20 6 9 17l-5-5"
-                          stroke="white"
-                          strokeWidth="3"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    )}
+                    {w.completed && <Check size={12} strokeWidth={3} />}
                   </span>
                 </div>
               ))}
@@ -307,7 +280,9 @@ export default function ProfilePage() {
             <span className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100">
               <Flame size={24} className="fill-orange-500 text-orange-500" />
             </span>
-            <p className="text-2xl font-extrabold">۷</p>
+            <p className="text-2xl font-extrabold">
+              {toPersianDigits(user.streakDays)}
+            </p>
             <p className="text-xs font-semibold text-ink/50">روز متوالی</p>
             <p className="text-[11px] text-brand-600">آفرین! ادامه بده 🎉</p>
           </div>

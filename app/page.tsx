@@ -10,35 +10,9 @@ import Avatar from "@/components/Avatar";
 import StatsPill from "@/components/StatsPill";
 import StoryCard from "@/components/StoryCard";
 import Link from "next/link";
-
-const stories = [
-  {
-    title: "موش کوچولو و انار",
-    emoji: "🐭",
-    bg: "bg-gradient-to-b from-[#EAF4E2] to-[#CFE6BE]",
-    progress: 100,
-  },
-  {
-    title: "ستاره در شهر",
-    emoji: "⭐",
-    bg: "bg-gradient-to-b from-[#1C2340] to-[#2E3A66]",
-    progress: 100,
-  },
-  {
-    title: "راز باغ انار",
-    emoji: "🚪",
-    bg: "bg-gradient-to-b from-[#7A4A33] to-[#4E2E1F]",
-    locked: true,
-    wordsToUnlock: 5,
-  },
-  {
-    title: "پرواز کلاغ",
-    emoji: "🐦‍⬛",
-    bg: "bg-gradient-to-b from-[#8FAF8A] to-[#4C6B57]",
-    locked: true,
-    wordsToUnlock: 10,
-  },
-];
+import { getCurrentUser } from "@/lib/api/profile";
+import { getStoryPreviews } from "@/lib/api/stories";
+import { getTodayLesson } from "@/lib/api/home";
 
 const tiles = [
   {
@@ -58,7 +32,7 @@ const tiles = [
     iconBg: "bg-sky-500",
   },
   {
-    href: "#",
+    href: "/stories",
     title: "داستان‌ها",
     subtitle: "داستان‌های من",
     icon: BookOpen,
@@ -75,14 +49,20 @@ const tiles = [
   },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [user, lesson, stories] = await Promise.all([
+    getCurrentUser(),
+    getTodayLesson(),
+    getStoryPreviews(4),
+  ]);
+
   return (
     <main className="px-4 pt-6">
       <div className="flex items-center justify-between">
-        <StatsPill />
+        <StatsPill xp={user.xp} streak={user.streakDays} />
         <div className="flex items-center gap-3">
           <div>
-            <h1 className="text-lg font-extrabold">سلام آرین! 👋</h1>
+            <h1 className="text-lg font-extrabold">سلام {user.name}! 👋</h1>
             <p className="text-sm text-ink/50">
               امروز چه چیز جدیدی یاد می‌گیریم؟
             </p>
@@ -102,13 +82,13 @@ export default function HomePage() {
 
         <div className="mt-3 flex items-center gap-4">
           <div className="flex-1">
-            <div className="text-6xl font-extrabold text-brand-500">م</div>
+            <div className="text-6xl font-extrabold text-brand-500">
+              {lesson.letter}
+            </div>
             <p className="mt-2 text-xl font-extrabold text-brand-600">
-              مثل مادر
+              {lesson.title}
             </p>
-            <p className="mt-1 text-sm text-ink/50">
-              بیایید با حرف «م» آشنا شویم.
-            </p>
+            <p className="mt-1 text-sm text-ink/50">{lesson.description}</p>
           </div>
           <div className="flex h-32 w-32 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-[#F3D7B5] to-[#E7B98C]">
             <span className="text-6xl">🤱</span>
@@ -125,7 +105,7 @@ export default function HomePage() {
       <section className="mt-7">
         <div className="flex items-center justify-between">
           <Link
-            href="#"
+            href="/stories"
             className="flex items-center gap-1 text-sm font-semibold text-brand-500"
           >
             <ChevronRight size={16} />
@@ -139,7 +119,7 @@ export default function HomePage() {
           className="no-scrollbar mt-3 flex gap-3 overflow-x-auto pb-1"
         >
           {stories.map((s) => (
-            <StoryCard key={s.title} story={s} />
+            <StoryCard key={s.id} story={s} />
           ))}
         </div>
       </section>
