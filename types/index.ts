@@ -172,3 +172,15 @@ export interface WritingUpdate {
   xpEarned: number;
   lettersWritten: number;
 }
+
+/** Result of requesting an OTP code for a phone number. */
+export interface OtpRequestResult {
+  success: boolean;
+  message: string;
+}
+
+/** Result of verifying an OTP code against a phone number. */
+export interface OtpVerifyResult {
+  success: boolean;
+  message: string;
+}

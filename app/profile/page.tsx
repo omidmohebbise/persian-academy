@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import {
   Settings,
   Sparkles,
@@ -13,6 +14,7 @@ import {
   Flame,
   Pencil,
   RotateCcw,
+  LogOut,
   Trophy,
   User,
   Check,
@@ -20,6 +22,7 @@ import {
 import Avatar from "@/components/Avatar";
 import StatsPill from "@/components/StatsPill";
 import { useAppState } from "@/lib/store/AppStateContext";
+import { useAuth } from "@/lib/store/AuthContext";
 import { mockBadges } from "@/lib/mock/user";
 import { toPersianDigits } from "@/lib/format";
 import type { BadgeIconKey, BadgeTheme } from "@/types";
@@ -41,7 +44,9 @@ const BADGE_THEMES: Record<BadgeTheme, { bg: string; iconBg: string }> = {
 };
 
 export default function ProfilePage() {
+  const router = useRouter();
   const { user, resetProgress } = useAppState();
+  const { logout } = useAuth();
   const badges = mockBadges;
 
   const goalPercent = Math.min(
@@ -102,6 +107,16 @@ export default function ProfilePage() {
           </button>
           <button className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-card">
             <Settings size={18} className="text-ink/60" />
+          </button>
+          <button
+            onClick={() => {
+              logout();
+              router.replace("/welcome");
+            }}
+            title="خروج از حساب"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-card"
+          >
+            <LogOut size={16} className="text-ink/60" />
           </button>
         </div>
       </div>

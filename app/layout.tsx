@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Vazirmatn } from "next/font/google";
 import "./globals.css";
-import BottomNav from "@/components/BottomNav";
+import AuthGate from "@/components/AuthGate";
+import { AuthProvider } from "@/lib/store/AuthContext";
 import { AppStateProvider } from "@/lib/store/AppStateContext";
 
 const vazir = Vazirmatn({
@@ -23,12 +24,11 @@ export default function RootLayout({
   return (
     <html lang="fa" dir="rtl">
       <body className={`${vazir.variable} font-vazir bg-cream text-ink`}>
-        <AppStateProvider>
-          <div className="mx-auto min-h-screen max-w-[520px] bg-cream pb-24">
-            {children}
-          </div>
-          <BottomNav />
-        </AppStateProvider>
+        <AuthProvider>
+          <AppStateProvider>
+            <AuthGate>{children}</AuthGate>
+          </AppStateProvider>
+        </AuthProvider>
       </body>
     </html>
   );
