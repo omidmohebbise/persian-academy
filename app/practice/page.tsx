@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { ArrowRight, ChevronLeft } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import StatsPill from "@/components/StatsPill";
 import LetterDrawingPractice from "@/components/LetterDrawingPractice";
 import WritingProgressCard from "@/components/WritingProgressCard";
@@ -21,7 +20,6 @@ export default function LettersPracticePage() {
   const [index, setIndex] = useState(0);
   const [checked, setChecked] = useState(false);
   const [xpEarned, setXpEarned] = useState(0);
-  const [finished, setFinished] = useState(false);
   const [hasDrawn, setHasDrawn] = useState(false);
   const [resetToken, setResetToken] = useState(0);
 
@@ -41,7 +39,7 @@ export default function LettersPracticePage() {
 
   function handleNext() {
     if (isLastLetter) {
-      setFinished(true);
+      router.push("/practice/complete?level=letters");
       return;
     }
     setIndex((i) => i + 1);
@@ -73,39 +71,20 @@ export default function LettersPracticePage() {
       <WritingProgressCard />
 
       <div className="mt-5">
-        {!finished ? (
-          <LetterDrawingPractice
-            letter={letterItem.word}
-            letterNumber={index + 1}
-            totalLetters={mockPracticeLetters.length}
-            exampleWord={getExampleWordForLetter(letterItem.word)}
-            checked={checked}
-            hasDrawn={hasDrawn}
-            resetToken={resetToken}
-            xpEarned={xpEarned}
-            onDraw={() => setHasDrawn(true)}
-            onClear={handleClear}
-            onCheck={handleCheck}
-            onNext={handleNext}
-          />
-        ) : (
-          <div className="rounded-3xl bg-white p-6 text-center shadow-card">
-            <span className="text-5xl">🎉</span>
-            <p className="mt-3 text-lg font-extrabold text-ink">
-              حروف اول را یاد گرفتی!
-            </p>
-            <p className="mt-1 text-sm text-ink/45">
-              آفرین! حالا وقتشه با همین حرف‌ها کلمه بنویسی.
-            </p>
-            <Link
-              href="/practice/words"
-              className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-500 py-3.5 text-base font-bold text-white shadow-soft transition active:scale-[0.98]"
-            >
-              تمرین کلمه‌ها
-              <ChevronLeft size={18} />
-            </Link>
-          </div>
-        )}
+        <LetterDrawingPractice
+          letter={letterItem.word}
+          letterNumber={index + 1}
+          totalLetters={mockPracticeLetters.length}
+          exampleWord={getExampleWordForLetter(letterItem.word)}
+          checked={checked}
+          hasDrawn={hasDrawn}
+          resetToken={resetToken}
+          xpEarned={xpEarned}
+          onDraw={() => setHasDrawn(true)}
+          onClear={handleClear}
+          onCheck={handleCheck}
+          onNext={handleNext}
+        />
       </div>
 
       <PracticeShelf
@@ -116,11 +95,9 @@ export default function LettersPracticePage() {
         unitLabel="حرف"
       />
 
-      {!finished && (
-        <p className="mt-4 text-center text-xs text-ink/35">
-          بعد از یادگیری این حرف‌ها، نوبت تمرین کلمه‌هاست 🎯
-        </p>
-      )}
+      <p className="mt-4 text-center text-xs text-ink/35">
+        بعد از یادگیری این حرف‌ها، نوبت تمرین کلمه‌هاست 🎯
+      </p>
     </main>
   );
 }

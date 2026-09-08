@@ -10,6 +10,9 @@ export const WRITING_GOAL_LETTERS = 100;
 /** Letter-count thresholds that award a "little writer" badge, in order. */
 export const WRITING_BADGE_MILESTONES = [30, 60, 100];
 
+/** XP awarded per letter or word traced (lib/api/practice.ts#submitWordWriting). */
+export const XP_PER_PRACTICE_ITEM = 20;
+
 /**
  * The writing-practice curriculum: one simple, kid-friendly word per Persian
  * letter (all 32), each broken into its isolated-form letters so

@@ -30,6 +30,8 @@ export interface User {
   levelWordsRequired: number;
   /** Total individual letters traced across all writing-practice words. */
   lettersWritten: number;
+  /** Ids of curriculum levels (lib/mock/levels.ts) finished so far. */
+  completedLevelIds: string[];
   stats: UserStats;
   weekCalendar: WeekDayStatus[];
 }
@@ -39,6 +41,8 @@ export type BadgeIconKey =
   | "star"
   | "book"
   | "calendar-check"
+  | "pencil"
+  | "message-circle"
   | "locked";
 
 export type BadgeTheme = "brand" | "sky" | "gold" | "purple" | "locked";

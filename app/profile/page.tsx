@@ -24,6 +24,7 @@ import StatsPill from "@/components/StatsPill";
 import { useAppState } from "@/lib/store/AppStateContext";
 import { useAuth } from "@/lib/store/AuthContext";
 import { mockBadges } from "@/lib/mock/user";
+import { getLevelBadges } from "@/lib/mock/levels";
 import { toPersianDigits } from "@/lib/format";
 import type { BadgeIconKey, BadgeTheme } from "@/types";
 
@@ -32,6 +33,8 @@ const BADGE_ICONS: Record<BadgeIconKey, typeof Sprout> = {
   star: Star,
   book: BookOpen,
   "calendar-check": CalendarCheck,
+  pencil: Pencil,
+  "message-circle": MessageCircle,
   locked: Lock,
 };
 
@@ -47,7 +50,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const { user, resetProgress } = useAppState();
   const { logout } = useAuth();
-  const badges = mockBadges;
+  const badges = [...mockBadges, ...getLevelBadges(user.completedLevelIds)];
 
   const goalPercent = Math.min(
     100,

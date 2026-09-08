@@ -1,6 +1,6 @@
 import type { PracticeWord, WordSubmissionResult } from "@/types";
 import { mockResponse } from "@/lib/api/config";
-import { mockPracticeWords } from "@/lib/mock/practiceWords";
+import { mockPracticeWords, XP_PER_PRACTICE_ITEM } from "@/lib/mock/practiceWords";
 
 /**
  * Backend contract: GET /api/v1/practice/words
@@ -22,7 +22,7 @@ export async function submitWordWriting(
   return mockResponse(
     {
       success: true,
-      xpEarned: 20,
+      xpEarned: XP_PER_PRACTICE_ITEM,
       message: `کلمه «${word.word}» را نوشتی!`,
     },
     400

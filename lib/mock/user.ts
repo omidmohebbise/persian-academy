@@ -13,6 +13,7 @@ export const mockUser: User = {
   level: 1,
   levelWordsRequired: 100,
   lettersWritten: 18,
+  completedLevelIds: [],
   stats: {
     storiesRead: 8,
     factsLearned: 3,

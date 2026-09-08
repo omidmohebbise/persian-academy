@@ -8,7 +8,6 @@ import LetterWritingPractice from "@/components/LetterWritingPractice";
 import WritingProgressCard from "@/components/WritingProgressCard";
 import PracticeShelf from "@/components/PracticeShelf";
 import { useAppState } from "@/lib/store/AppStateContext";
-import { toPersianDigits } from "@/lib/format";
 import { mockPracticeWords } from "@/lib/mock/practiceWords";
 
 export default function WordsPracticePage() {
@@ -18,7 +17,6 @@ export default function WordsPracticePage() {
   const [index, setIndex] = useState(0);
   const [checked, setChecked] = useState(false);
   const [xpEarned, setXpEarned] = useState(0);
-  const [finished, setFinished] = useState(false);
   const [hasDrawn, setHasDrawn] = useState(false);
   const [resetToken, setResetToken] = useState(0);
 
@@ -38,7 +36,7 @@ export default function WordsPracticePage() {
 
   function handleNext() {
     if (isLastWord) {
-      setFinished(true);
+      router.push("/practice/complete?level=words");
       return;
     }
     setIndex((i) => i + 1);
@@ -70,32 +68,19 @@ export default function WordsPracticePage() {
       <WritingProgressCard />
 
       <div className="mt-5">
-        {!finished ? (
-          <LetterWritingPractice
-            word={word}
-            wordNumber={index + 1}
-            totalWords={mockPracticeWords.length}
-            checked={checked}
-            hasDrawn={hasDrawn}
-            resetToken={resetToken}
-            xpEarned={xpEarned}
-            onDraw={() => setHasDrawn(true)}
-            onClear={handleClear}
-            onCheck={handleCheck}
-            onNext={handleNext}
-          />
-        ) : (
-          <div className="rounded-3xl bg-white p-6 text-center shadow-card">
-            <span className="text-5xl">🎉</span>
-            <p className="mt-3 text-lg font-extrabold text-ink">
-              همه‌ی کلمه‌ها را تمرین کردی!
-            </p>
-            <p className="mt-1 text-sm text-ink/45">
-              آفرین! تمام {toPersianDigits(mockPracticeWords.length)} کلمه را
-              نوشتی.
-            </p>
-          </div>
-        )}
+        <LetterWritingPractice
+          word={word}
+          wordNumber={index + 1}
+          totalWords={mockPracticeWords.length}
+          checked={checked}
+          hasDrawn={hasDrawn}
+          resetToken={resetToken}
+          xpEarned={xpEarned}
+          onDraw={() => setHasDrawn(true)}
+          onClear={handleClear}
+          onCheck={handleCheck}
+          onNext={handleNext}
+        />
       </div>
 
       <PracticeShelf

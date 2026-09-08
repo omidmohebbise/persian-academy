@@ -53,6 +53,8 @@ interface AppStateValue extends AppSnapshot {
   practiceWordWritten: (
     word: PracticeWord
   ) => Promise<{ result: WordSubmissionResult; progress: WritingUpdate | null }>;
+  /** Marks a curriculum level (lib/mock/levels.ts) as finished. Returns whether it was newly completed. */
+  completeLevel: (levelId: string) => boolean;
   resetProgress: () => void;
 }
 
@@ -65,7 +67,18 @@ function seedState(): AppSnapshot {
 function loadPersisted(): AppSnapshot {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as AppSnapshot;
+    if (raw) {
+      // Merged against the seed so a User/Story shape added after someone's
+      // last visit (e.g. completedLevelIds) backfills instead of coming
+      // back undefined — a stored snapshot only ever has an older shape,
+      // never a newer one.
+      const parsed = JSON.parse(raw) as Partial<AppSnapshot>;
+      const seed = seedState();
+      return {
+        user: { ...seed.user, ...parsed.user },
+        stories: parsed.stories ?? seed.stories,
+      };
+    }
   } catch {
     // corrupted/unavailable storage — fall back to the seed
   }
@@ -110,6 +123,18 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     return { result, progress: update };
   }
 
+  function completeLevel(levelId: string): boolean {
+    if (state.user.completedLevelIds.includes(levelId)) return false;
+    setState({
+      ...state,
+      user: {
+        ...state.user,
+        completedLevelIds: [...state.user.completedLevelIds, levelId],
+      },
+    });
+    return true;
+  }
+
   function resetProgress() {
     setState(seedState());
   }
@@ -122,6 +147,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         learnForeignWord,
         learnPersianWord,
         practiceWordWritten,
+        completeLevel,
         resetProgress,
       }}
     >
