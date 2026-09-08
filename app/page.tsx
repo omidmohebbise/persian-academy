@@ -94,10 +94,13 @@ export default function HomePage() {
           </div>
         </div>
 
-        <button className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-500 py-3.5 text-base font-bold text-white shadow-soft transition active:scale-[0.98]">
+        <Link
+          href="/practice"
+          className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-500 py-3.5 text-base font-bold text-white shadow-soft transition active:scale-[0.98]"
+        >
           <ChevronRight size={20} />
           <span>شروع درس</span>
-        </button>
+        </Link>
       </section>
 
       {/* Stories */}

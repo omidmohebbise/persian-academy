@@ -3,7 +3,7 @@
  * trivial to unit test and to eventually move onto a real backend unchanged.
  * lib/store/AppStateContext.tsx is the only caller today.
  */
-import type { ProgressUpdate, Story, User } from "@/types";
+import type { PracticeWord, ProgressUpdate, Story, User, WritingUpdate } from "@/types";
 
 /**
  * Every 100 words is a level, per the project description's milestones
@@ -72,4 +72,29 @@ export function applyWordLearned(
     next,
     update: { xpEarned, leveledUp, newLevel, unlockedStoryTitle },
   };
+}
+
+/**
+ * Applies "the learner just traced this word's letters" to a snapshot: bumps
+ * XP and the running letters-written count used by the writing-practice
+ * screen's progress bar. Kept separate from applyWordLearned — tracing a
+ * curriculum word doesn't affect the vocabulary/story-unlock system.
+ */
+export function applyWordWritten(
+  snapshot: AppSnapshot,
+  word: PracticeWord,
+  xpEarned: number
+): { next: AppSnapshot; update: WritingUpdate } {
+  const lettersWritten = snapshot.user.lettersWritten + word.letters.length;
+
+  const next: AppSnapshot = {
+    ...snapshot,
+    user: {
+      ...snapshot.user,
+      xp: snapshot.user.xp + xpEarned,
+      lettersWritten,
+    },
+  };
+
+  return { next, update: { xpEarned, lettersWritten } };
 }

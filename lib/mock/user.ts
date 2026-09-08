@@ -12,6 +12,7 @@ export const mockUser: User = {
   // 200 → ... Level Up" milestones (see lib/store/AppStateContext.tsx).
   level: 1,
   levelWordsRequired: 100,
+  lettersWritten: 18,
   stats: {
     storiesRead: 8,
     factsLearned: 3,

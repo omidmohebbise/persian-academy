@@ -24,11 +24,21 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { ProgressUpdate, WordSubmissionResult } from "@/types";
+import type {
+  PracticeWord,
+  ProgressUpdate,
+  WordSubmissionResult,
+  WritingUpdate,
+} from "@/types";
 import { mockUser } from "@/lib/mock/user";
 import { mockStories } from "@/lib/mock/stories";
 import { submitForeignWord, submitPersianWord } from "@/lib/api/discover";
-import { applyWordLearned, type AppSnapshot } from "@/lib/store/progress";
+import { submitWordWriting } from "@/lib/api/practice";
+import {
+  applyWordLearned,
+  applyWordWritten,
+  type AppSnapshot,
+} from "@/lib/store/progress";
 
 const STORAGE_KEY = "yadegaar_state_v1";
 
@@ -40,6 +50,9 @@ interface AppStateValue extends AppSnapshot {
   learnPersianWord: (
     word: string
   ) => Promise<{ result: WordSubmissionResult; progress: ProgressUpdate | null }>;
+  practiceWordWritten: (
+    word: PracticeWord
+  ) => Promise<{ result: WordSubmissionResult; progress: WritingUpdate | null }>;
   resetProgress: () => void;
 }
 
@@ -89,6 +102,14 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     return { result, progress: update };
   }
 
+  async function practiceWordWritten(word: PracticeWord) {
+    const result = await submitWordWriting(word);
+    if (!result.success) return { result, progress: null };
+    const { next, update } = applyWordWritten(state, word, result.xpEarned);
+    setState(next);
+    return { result, progress: update };
+  }
+
   function resetProgress() {
     setState(seedState());
   }
@@ -100,6 +121,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         hydrated,
         learnForeignWord,
         learnPersianWord,
+        practiceWordWritten,
         resetProgress,
       }}
     >

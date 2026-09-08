@@ -28,6 +28,8 @@ export interface User {
   wordsLearned: number;
   level: number;
   levelWordsRequired: number;
+  /** Total individual letters traced across all writing-practice words. */
+  lettersWritten: number;
   stats: UserStats;
   weekCalendar: WeekDayStatus[];
 }
@@ -134,4 +136,39 @@ export interface ProgressUpdate {
   leveledUp: boolean;
   newLevel: number;
   unlockedStoryTitle: string | null;
+}
+
+/**
+ * One dashed guide stroke for the letter-writing practice screen: a path in
+ * a 0–100 square viewBox, plus where its numbered start marker sits.
+ */
+export interface LetterStroke {
+  d: string;
+  startX: number;
+  startY: number;
+}
+
+/** A single Persian alphabet letter's writing-practice guide (isolated form). */
+export interface PersianLetterInfo {
+  glyph: string;
+  /** The letter's spoken name, e.g. "الف" for ا. */
+  name: string;
+  strokes: LetterStroke[];
+  /** Diacritic dots, drawn after the strokes as small diamond markers. */
+  dots: { x: number; y: number }[];
+}
+
+/** One word in the writing-practice curriculum — one per Persian letter. */
+export interface PracticeWord {
+  id: string;
+  word: string;
+  /** The word's letters in reading order, isolated-form glyphs. */
+  letters: string[];
+  emoji: string;
+}
+
+/** Result of applying a traced word to the user's writing progress. */
+export interface WritingUpdate {
+  xpEarned: number;
+  lettersWritten: number;
 }
