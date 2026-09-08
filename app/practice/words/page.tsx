@@ -2,19 +2,16 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { ArrowRight, ChevronLeft } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import StatsPill from "@/components/StatsPill";
-import LetterDrawingPractice from "@/components/LetterDrawingPractice";
+import LetterWritingPractice from "@/components/LetterWritingPractice";
 import WritingProgressCard from "@/components/WritingProgressCard";
 import PracticeShelf from "@/components/PracticeShelf";
 import { useAppState } from "@/lib/store/AppStateContext";
-import {
-  mockPracticeLetters,
-  getExampleWordForLetter,
-} from "@/lib/mock/practiceWords";
+import { toPersianDigits } from "@/lib/format";
+import { mockPracticeWords } from "@/lib/mock/practiceWords";
 
-export default function LettersPracticePage() {
+export default function WordsPracticePage() {
   const router = useRouter();
   const { user, practiceWordWritten } = useAppState();
 
@@ -25,11 +22,11 @@ export default function LettersPracticePage() {
   const [hasDrawn, setHasDrawn] = useState(false);
   const [resetToken, setResetToken] = useState(0);
 
-  const letterItem = mockPracticeLetters[index];
-  const isLastLetter = index === mockPracticeLetters.length - 1;
+  const word = mockPracticeWords[index];
+  const isLastWord = index === mockPracticeWords.length - 1;
 
   async function handleCheck() {
-    const { result } = await practiceWordWritten(letterItem);
+    const { result } = await practiceWordWritten(word);
     setXpEarned(result.xpEarned);
     setChecked(true);
   }
@@ -40,7 +37,7 @@ export default function LettersPracticePage() {
   }
 
   function handleNext() {
-    if (isLastLetter) {
+    if (isLastWord) {
       setFinished(true);
       return;
     }
@@ -66,7 +63,7 @@ export default function LettersPracticePage() {
           تمرین نوشتن <span className="align-middle">✏️</span>
         </h1>
         <p className="mt-1 text-sm text-ink/45">
-          با انگشتت بنویس، فارسی رو قشنگ‌تر یاد بگیر!
+          حالا با کلمه‌ها تمرین کن و نوشتنت را قشنگ‌تر کن!
         </p>
       </div>
 
@@ -74,11 +71,10 @@ export default function LettersPracticePage() {
 
       <div className="mt-5">
         {!finished ? (
-          <LetterDrawingPractice
-            letter={letterItem.word}
-            letterNumber={index + 1}
-            totalLetters={mockPracticeLetters.length}
-            exampleWord={getExampleWordForLetter(letterItem.word)}
+          <LetterWritingPractice
+            word={word}
+            wordNumber={index + 1}
+            totalWords={mockPracticeWords.length}
             checked={checked}
             hasDrawn={hasDrawn}
             resetToken={resetToken}
@@ -92,35 +88,23 @@ export default function LettersPracticePage() {
           <div className="rounded-3xl bg-white p-6 text-center shadow-card">
             <span className="text-5xl">🎉</span>
             <p className="mt-3 text-lg font-extrabold text-ink">
-              حروف اول را یاد گرفتی!
+              همه‌ی کلمه‌ها را تمرین کردی!
             </p>
             <p className="mt-1 text-sm text-ink/45">
-              آفرین! حالا وقتشه با همین حرف‌ها کلمه بنویسی.
+              آفرین! تمام {toPersianDigits(mockPracticeWords.length)} کلمه را
+              نوشتی.
             </p>
-            <Link
-              href="/practice/words"
-              className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-500 py-3.5 text-base font-bold text-white shadow-soft transition active:scale-[0.98]"
-            >
-              تمرین کلمه‌ها
-              <ChevronLeft size={18} />
-            </Link>
           </div>
         )}
       </div>
 
       <PracticeShelf
-        title="حروف بعدی"
-        items={mockPracticeLetters}
+        title="کلمات تمرین شده"
+        items={mockPracticeWords}
         currentIndex={index}
         checked={checked}
-        unitLabel="حرف"
+        unitLabel="کلمه"
       />
-
-      {!finished && (
-        <p className="mt-4 text-center text-xs text-ink/35">
-          بعد از یادگیری این حرف‌ها، نوبت تمرین کلمه‌هاست 🎯
-        </p>
-      )}
     </main>
   );
 }

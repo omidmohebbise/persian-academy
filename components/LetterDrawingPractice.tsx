@@ -3,76 +3,20 @@
 import { Volume2, ChevronLeft, Star, Eraser } from "lucide-react";
 import DrawCanvas from "@/components/DrawCanvas";
 import LetterStrokeGuide from "@/components/LetterStrokeGuide";
-import { getLetterInfo } from "@/lib/mock/letters";
 import { toPersianDigits } from "@/lib/format";
 import type { PracticeWord } from "@/types";
 
-/** One letter's dashed trace guide + a canvas to draw it on top of. */
-function LetterTraceBox({
-  glyph,
-  resetToken,
-  onDraw,
-}: {
-  glyph: string;
-  resetToken: number;
-  onDraw: () => void;
-}) {
-  const info = getLetterInfo(glyph);
-
-  return (
-    <div
-      title={info.name}
-      className="flex w-[30%] min-w-[84px] flex-col items-center gap-1 rounded-2xl border border-black/5 bg-cream/60 p-2"
-    >
-      <span className="text-2xl font-extrabold text-ink">{glyph}</span>
-      <div className="relative h-20 w-20">
-        <LetterStrokeGuide glyph={glyph} className="absolute inset-0 h-20 w-20" />
-        <DrawCanvas
-          key={resetToken}
-          className="absolute inset-0 h-20 w-20 cursor-crosshair"
-          onDraw={onDraw}
-        />
-      </div>
-    </div>
-  );
-}
-
-/** The combined word — a bigger canvas over faded guide letters, for free tracing. */
-function WordTraceArea({
-  word,
-  resetToken,
-  onDraw,
-}: {
-  word: PracticeWord;
-  resetToken: number;
-  onDraw: () => void;
-}) {
-  return (
-    <div className="relative mt-5 h-32 overflow-hidden rounded-2xl border-2 border-dashed border-black/10 bg-cream/60">
-      <div
-        dir="rtl"
-        className="pointer-events-none absolute inset-0 flex items-center justify-center gap-1"
-      >
-        {word.letters.map((glyph, i) => (
-          <span key={i} className="text-5xl font-extrabold text-ink/15">
-            {glyph}
-          </span>
-        ))}
-      </div>
-      <DrawCanvas
-        key={resetToken}
-        className="absolute inset-0 h-full w-full cursor-crosshair"
-        strokeWidth={6}
-        onDraw={onDraw}
-      />
-    </div>
-  );
-}
-
-export default function LetterWritingPractice({
-  word,
-  wordNumber,
-  totalWords,
+/**
+ * Level 1: draw one big letter at a time, with the guide it's built from
+ * (components/LetterStrokeGuide.tsx) and an example word for context. The
+ * follow-on step is components/LetterWritingPractice.tsx, which reuses the
+ * same guide/canvas at word scale.
+ */
+export default function LetterDrawingPractice({
+  letter,
+  letterNumber,
+  totalLetters,
+  exampleWord,
   checked,
   hasDrawn,
   resetToken,
@@ -82,13 +26,14 @@ export default function LetterWritingPractice({
   onCheck,
   onNext,
 }: {
-  word: PracticeWord;
-  wordNumber: number;
-  totalWords: number;
+  letter: string;
+  letterNumber: number;
+  totalLetters: number;
+  exampleWord?: PracticeWord;
   checked: boolean;
-  /** Whether the learner has drawn anything yet this word — gates the check button. */
+  /** Whether the learner has drawn anything yet on this letter — gates the check button. */
   hasDrawn: boolean;
-  /** Bumped by the parent to remount (and so clear) every canvas on this screen. */
+  /** Bumped by the parent to remount (and so clear) the trace canvas. */
   resetToken: number;
   xpEarned: number;
   onDraw: () => void;
@@ -96,9 +41,9 @@ export default function LetterWritingPractice({
   onCheck: () => void;
   onNext: () => void;
 }) {
-  function speakWord() {
+  function speakLetter() {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-    const utterance = new SpeechSynthesisUtterance(word.word);
+    const utterance = new SpeechSynthesisUtterance(letter);
     utterance.lang = "fa-IR";
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
@@ -108,7 +53,7 @@ export default function LetterWritingPractice({
     <div className="rounded-3xl bg-white p-5 shadow-card">
       <div className="flex items-center justify-between">
         <span className="rounded-full bg-black/5 px-3 py-1.5 text-xs font-bold text-ink/60">
-          کلمه {toPersianDigits(wordNumber)} / {toPersianDigits(totalWords)}
+          حرف {toPersianDigits(letterNumber)} / {toPersianDigits(totalLetters)}
         </span>
         <div className="flex items-center gap-2">
           <button
@@ -119,36 +64,54 @@ export default function LetterWritingPractice({
             پاک کن
           </button>
           <button
-            onClick={speakWord}
+            onClick={speakLetter}
             className="flex items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1.5 text-xs font-bold text-brand-600 transition active:scale-95"
           >
             <Volume2 size={14} />
-            صدای کلمه
+            صدای حرف
           </button>
         </div>
       </div>
 
       <div className="mt-4 text-center">
         <h2 className="text-lg font-extrabold text-ink">
-          کلمه «{word.word}» را بنویس
+          حرف «{letter}» را بنویس
         </h2>
         <p className="mt-1 text-xs text-ink/45">
-          با موس یا انگشتت روی خط‌چین‌ها بکش و مسیر حرکت را دنبال کن.
+          با موس یا انگشتت مسیر حرکت را دنبال کن.
         </p>
       </div>
 
-      <div dir="rtl" className="mt-5 flex flex-wrap justify-center gap-3">
-        {word.letters.map((glyph, i) => (
-          <LetterTraceBox
-            key={i}
-            glyph={glyph}
-            resetToken={resetToken}
+      <div className="mt-5 flex items-stretch gap-3">
+        {/* Example card: the letter + a familiar word that starts with it */}
+        <div className="flex w-[34%] shrink-0 flex-col items-center justify-center gap-1 rounded-2xl bg-cream/60 p-3 text-center">
+          <span className="text-5xl font-extrabold text-brand-500">
+            {letter}
+          </span>
+          {exampleWord && (
+            <>
+              <p className="mt-1 text-xs text-ink/45">مثل</p>
+              <p className="text-base font-extrabold text-ink">
+                {exampleWord.word}
+              </p>
+              <span className="mt-2 text-4xl">{exampleWord.emoji}</span>
+            </>
+          )}
+        </div>
+
+        {/* Big trace box: ruled guide lines + the letter's stroke guide + the drawing canvas */}
+        <div className="relative h-48 flex-1 overflow-hidden rounded-2xl border-2 border-dashed border-black/10 bg-cream/40">
+          <div className="pointer-events-none absolute inset-x-0 top-1/3 border-t border-dashed border-black/10" />
+          <div className="pointer-events-none absolute inset-x-0 top-2/3 border-t border-dashed border-black/10" />
+          <LetterStrokeGuide glyph={letter} className="absolute inset-0 h-full w-full" />
+          <DrawCanvas
+            key={resetToken}
+            className="absolute inset-0 h-full w-full cursor-crosshair"
+            strokeWidth={8}
             onDraw={onDraw}
           />
-        ))}
+        </div>
       </div>
-
-      <WordTraceArea word={word} resetToken={resetToken} onDraw={onDraw} />
 
       {!checked ? (
         <>
@@ -161,7 +124,7 @@ export default function LetterWritingPractice({
           </button>
           {!hasDrawn && (
             <p className="mt-2 text-center text-xs text-ink/40">
-              اول با موس یا انگشتت حرف‌ها را بکش ✏️
+              اول با موس یا انگشتت حرف را بکش ✏️
             </p>
           )}
         </>
@@ -173,10 +136,10 @@ export default function LetterWritingPractice({
             </span>
             <div className="flex-1 text-right">
               <p className="text-sm font-extrabold text-brand-700">
-                آفرین! خیلی خوب نوشتی!
+                آفرین! خیلی خوب بودی!
               </p>
               <p className="text-xs text-ink/45">
-                کلمه «{word.word}» را نوشتی.
+                حرف «{letter}» را نوشتی.
               </p>
             </div>
             <span className="shrink-0 rounded-full bg-gold-500 px-3 py-1 text-xs font-extrabold text-white">
@@ -187,7 +150,7 @@ export default function LetterWritingPractice({
             onClick={onNext}
             className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-500 py-3.5 text-base font-bold text-white shadow-soft transition active:scale-[0.98]"
           >
-            کلمه بعدی
+            حرف بعدی
             <ChevronLeft size={18} />
           </button>
         </>

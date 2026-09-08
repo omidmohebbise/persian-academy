@@ -1,4 +1,5 @@
 import type { PracticeWord } from "@/types";
+import { LETTER_LEARNING_ORDER, getLetterInfo } from "@/lib/mock/letters";
 
 /** Practiced words are grouped into batches of this size, each capped by a reward chest. */
 export const WRITING_BATCH_SIZE = 5;
@@ -21,7 +22,7 @@ export const mockPracticeWords: PracticeWord[] = [
   { id: "w_babr", word: "ببر", letters: ["ب", "ب", "ر"], emoji: "🐯" },
   { id: "w_parande", word: "پرنده", letters: ["پ", "ر", "ن", "د", "ه"], emoji: "🐦" },
   { id: "w_top", word: "توپ", letters: ["ت", "و", "پ"], emoji: "⚽" },
-  { id: "w_mosalas", word: "مثلث", letters: ["م", "ث", "ل", "ث"], emoji: "🔺" },
+  { id: "w_sanie", word: "ثانیه", letters: ["ث", "ا", "ن", "ی", "ه"], emoji: "⏱️" },
   { id: "w_juje", word: "جوجه", letters: ["ج", "و", "ج", "ه"], emoji: "🐥" },
   { id: "w_chatr", word: "چتر", letters: ["چ", "ت", "ر"], emoji: "☂️" },
   { id: "w_heyvan", word: "حیوان", letters: ["ح", "ی", "و", "ا", "ن"], emoji: "🐾" },
@@ -34,7 +35,7 @@ export const mockPracticeWords: PracticeWord[] = [
   { id: "w_sib", word: "سیب", letters: ["س", "ی", "ب"], emoji: "🍎" },
   { id: "w_shir", word: "شیر", letters: ["ش", "ی", "ر"], emoji: "🦁" },
   { id: "w_sandali", word: "صندلی", letters: ["ص", "ن", "د", "ل", "ی"], emoji: "🪑" },
-  { id: "w_riazi", word: "ریاضی", letters: ["ر", "ی", "ا", "ض", "ی"], emoji: "🔢" },
+  { id: "w_zarban", word: "ضربان", letters: ["ض", "ر", "ب", "ا", "ن"], emoji: "💓" },
   { id: "w_tooti", word: "طوطی", letters: ["ط", "و", "ط", "ی"], emoji: "🦜" },
   { id: "w_zarf", word: "ظرف", letters: ["ظ", "ر", "ف"], emoji: "🍽️" },
   { id: "w_eynak", word: "عینک", letters: ["ع", "ی", "ن", "ک"], emoji: "👓" },
@@ -50,3 +51,24 @@ export const mockPracticeWords: PracticeWord[] = [
   { id: "w_havapeyma", word: "هواپیما", letters: ["ه", "و", "ا", "پ", "ی", "م", "ا"], emoji: "✈️" },
   { id: "w_yakh", word: "یخ", letters: ["ی", "خ"], emoji: "🧊" },
 ];
+
+/** The word that best demonstrates a given letter — its first letter. */
+export function getExampleWordForLetter(glyph: string): PracticeWord | undefined {
+  return mockPracticeWords.find((w) => w.letters[0] === glyph);
+}
+
+/**
+ * The Level 1 "learn to draw" curriculum: the first batch of
+ * LETTER_LEARNING_ORDER, modeled as single-letter PracticeWords so the same
+ * progress/XP plumbing (AppStateContext#practiceWordWritten) and shelf UI
+ * (components/PracticeShelf.tsx) work unchanged for both letters and words.
+ */
+export const mockPracticeLetters: PracticeWord[] = LETTER_LEARNING_ORDER.slice(
+  0,
+  WRITING_BATCH_SIZE
+).map((glyph) => ({
+  id: `letter_${getLetterInfo(glyph).name}`,
+  word: glyph,
+  letters: [glyph],
+  emoji: getExampleWordForLetter(glyph)?.emoji ?? "✏️",
+}));

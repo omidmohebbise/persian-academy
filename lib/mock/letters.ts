@@ -104,6 +104,24 @@ export const PERSIAN_LETTERS: PersianLetterInfo[] = [
   { glyph: "ی", name: "یه", strokes: [T.bowlSeat], dots: BELOW_2 },
 ];
 
+/**
+ * The order letters are introduced in, for the Level 1 "learn to draw"
+ * curriculum (components/LetterDrawingPractice.tsx via app/practice/page.tsx).
+ * Starts with the same five letters — م‌ا‌د‌ر‌س — the "بخوانیم" first-grade
+ * primer opens with, since they're enough to build simple words like مادر
+ * and در right away; the rest follow in alphabet order.
+ */
+export const LETTER_LEARNING_ORDER: string[] = [
+  "م",
+  "ا",
+  "د",
+  "ر",
+  "س",
+  ...PERSIAN_LETTERS.map((l) => l.glyph).filter(
+    (g) => !["م", "ا", "د", "ر", "س"].includes(g)
+  ),
+];
+
 const LETTERS_BY_GLYPH: Record<string, PersianLetterInfo> = Object.fromEntries(
   PERSIAN_LETTERS.map((l) => [l.glyph, l])
 );
